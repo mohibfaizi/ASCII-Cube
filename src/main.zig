@@ -71,10 +71,56 @@ fn drawCube() void {
     }
 }
 
-fn drawTriangle(v0: Vec2, v1: Vec2, v2: Vec2) void {
-    _ = v0;
-    _ = v1;
-    _ = v2;
+fn drawTriangle(vec0: Vec2, vec1: Vec2, vec2: Vec2) void {
+    var v0 = vec0;
+    var v1 = vec1;
+    var v2 = vec2;
+    //sort the vertices by ASC y
+    if (v0.y > v1.y) {
+        v0 = vec1;
+        v1 = vec0;
+    }
+    if (v1.y > v2.y) {
+        const tmp = v2;
+        v2 = v1;
+        v1 = tmp;
+    }
+    if (v0.y > v1.y) {
+        const tmp = v0;
+        v0 = v1;
+        v1 = tmp;
+    }
+
+    if (v2.y == v1.y) {
+        drawFlatBottom(v0, v1, v2);
+        return;
+    }
+    if (v0.y == v1.y) {
+        drawFlatTop(v0, v1, v2);
+    }
+
+    const midpoint = Vec2{
+        .x = v0.x + (v2.x - v0.x) * (v1.y - v0.y) / (v2.y - v0.y),
+        .y = v1.y,
+    };
+    drawFlatBottom(v0, v1, midpoint);
+    drawFlatTop(v1, midpoint, v2);
+}
+
+fn drawFlatTop(t0: Vec2, t1: Vec2, b: Vec2) void {
+    var x_b = t0.x;
+    var x_e = t1.x;
+
+    const x_inc_0: f32 = (b.x - t0.x) / (b.y - t0.y);
+    const x_inc_1: f32 = (b.x - t1.x) / (b.y - t1.y);
+
+    const y_b: usize = @intFromFloat(t0.y);
+    const y_e: usize = @intFromFloat(b.y + 1);
+    for (y_b..y_e) |y| {
+        drawScanLine(y, @intFromFloat(@round(x_b)), @intFromFloat(@round(x_e)), '*');
+        x_b += x_inc_0;
+        x_e += x_inc_1;
+    }
 }
 
 fn drawFlatBottom(t: Vec2, b0: Vec2, b1: Vec2) void {
@@ -119,7 +165,9 @@ pub fn main() !void {
     while (true) {
         clearScreen();
         // update
-        drawFlatBottom(Vec2{ .x = 100, .y = 5 }, Vec2{ .x = 200, .y = 30 }, Vec2{ .x = 10, .y = 30 });
+        //drawFlatBottom(Vec2{ .x = 100, .y = 5 }, Vec2{ .x = 200, .y = 30 }, Vec2{ .x = 10, .y = 30 });
+        //drawFlatTop(Vec2{ .x = 200, .y = 5 }, Vec2{ .x = 10, .y = 5 }, Vec2{ .x = 100, .y = 30 });
+        drawTriangle(Vec2{ .x = 10, .y = 5 }, Vec2{ .x = 150, .y = 15 }, Vec2{ .x = 70, .y = 34 });
         try displayScreen(stdout);
         std.time.sleep(100_000_000);
     }
